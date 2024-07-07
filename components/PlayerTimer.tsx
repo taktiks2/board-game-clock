@@ -5,6 +5,7 @@ import { playerColors, defaultColor } from "@/constants/Colors";
 interface Props {
   active: boolean;
   disable: boolean;
+  pause: boolean;
   time: number;
   name: string;
   order: number;
@@ -14,6 +15,7 @@ interface Props {
 export default function PlayerTimer({
   active,
   disable,
+  pause,
   time,
   name,
   order,
@@ -47,11 +49,13 @@ export default function PlayerTimer({
   };
 
   useEffect(() => {
-    if (active) {
+    if (pause) {
+      stopTimer();
+    } else if (active) {
       startTimer();
     }
     return () => stopTimer();
-  }, [active]);
+  }, [active, pause]);
 
   return (
     <TouchableOpacity
@@ -64,8 +68,8 @@ export default function PlayerTimer({
         },
       ]}
     >
-      <Text>{name}</Text>
-      <Text>{timer}</Text>
+      <Text style={styles.text}>{name}</Text>
+      <Text style={styles.text}>{timer}</Text>
     </TouchableOpacity>
   );
 }
@@ -76,5 +80,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 10,
+  },
+  text: {
+    fontSize: 24,
+    color: "#111",
   },
 });
