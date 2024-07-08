@@ -12,23 +12,25 @@ export default function TimePicker({ value, onUpdate }: Props) {
   const [minute, setMinute] = useState(Math.floor((value % 3600) / 60));
   const [second, setSecond] = useState(value % 60);
 
-  const calculateTime = () => {
-    onUpdate(hour * 3600 + minute * 60 + second);
-  };
-
   const handleChangeHour = (num: number) => {
     setHour(num);
-    calculateTime();
+    const time = num * 3600 + minute * 60 + second;
+    console.log("time", time);
+    onUpdate(time);
   };
 
   const handleChangeMinute = (num: number) => {
     setMinute(num);
-    calculateTime();
+    const time = hour * 3600 + num * 60 + second;
+    console.log("time", time);
+    onUpdate(time);
   };
 
   const handleChangeSecond = (num: number) => {
     setSecond(num);
-    calculateTime();
+    const time = hour * 3600 + minute * 60 + num;
+    console.log("time", time);
+    onUpdate(time);
   };
 
   return (

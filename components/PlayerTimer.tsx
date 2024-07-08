@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { playerColors, defaultColor } from "@/constants/Colors";
+import { Player } from "@/states/playerState";
 
 interface Props {
   active: boolean;
   disable: boolean;
   pause: boolean;
-  time: number;
-  name: string;
-  order: number;
+  player: Player;
   onPress: () => void;
 }
 
@@ -16,12 +15,10 @@ export default function PlayerTimer({
   active,
   disable,
   pause,
-  time,
-  name,
-  order,
+  player,
   onPress,
 }: Props) {
-  const [timer, setTimer] = useState(time);
+  const [timer, setTimer] = useState(player.time);
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
 
   const startTimer = () => {
@@ -44,9 +41,13 @@ export default function PlayerTimer({
 
   const handlePress = () => {
     stopTimer();
-    setTimer(time);
+    setTimer(player.time);
     onPress();
   };
+
+  useEffect(() => {
+    setTimer(player.time);
+  }, [player]);
 
   useEffect(() => {
     if (pause) {
@@ -64,11 +65,11 @@ export default function PlayerTimer({
       style={[
         styles.container,
         {
-          backgroundColor: active ? playerColors[order] : defaultColor,
+          backgroundColor: active ? playerColors[player.order] : defaultColor,
         },
       ]}
     >
-      <Text style={styles.text}>{name}</Text>
+      <Text style={styles.text}>{player.name}</Text>
       <Text style={styles.text}>{timer}</Text>
     </TouchableOpacity>
   );

@@ -1,6 +1,6 @@
 import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { useRecoilState } from "recoil";
-import { playerState } from "@/states/playerState";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { settingPlayerState, playerState } from "@/states/playerState";
 import Button from "@/components/Button";
 import { useState } from "react";
 import PlayerNumberSelector from "@/components/PlayerNumberSelector";
@@ -11,7 +11,8 @@ import { router } from "expo-router";
 const PLAYERS = Array.from({ length: 3 }, (_, i) => i + 2);
 
 export default function Settings() {
-  const [players, setPlayers] = useRecoilState(playerState);
+  const [players, setPlayers] = useRecoilState(settingPlayerState);
+  const setPlayerState = useSetRecoilState(playerState);
   const [playerNumber, setPlayerNumber] = useState(players.length);
 
   const handleUpdatePlayerNumber = (num: number) => {
@@ -49,6 +50,8 @@ export default function Settings() {
       {
         text: "OK",
         onPress: () => {
+          // NOTE: 新しいオブジェクトを生成して、Recoil の状態を更新する
+          setPlayerState([...players]);
           router.back();
         },
       },

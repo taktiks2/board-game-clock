@@ -1,5 +1,5 @@
 import { View, StyleSheet } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PlayerTimer from "@/components/PlayerTimer";
 import MenuBar from "@/components/MenuBar";
 import Overlay from "@/components/Overlay";
@@ -25,6 +25,13 @@ export default function Index() {
     setPause(false);
   };
 
+  useEffect(() => {
+    console.log("reset");
+    console.log(players);
+    setPause(true);
+    setCurrentPlayer(null);
+  }, [players]);
+
   return (
     <>
       {(currentPlayer === null || pause) && (
@@ -44,16 +51,13 @@ export default function Index() {
       />
       <View style={styles.body}>
         {players.map((player, i) => {
-          const active = player.order === currentPlayer;
           return (
             <PlayerTimer
               key={i}
-              name={player.name}
-              time={player.time}
-              order={player.order}
+              player={player}
               onPress={handleChangePlayer}
-              active={active}
-              disable={!active}
+              active={player.order === currentPlayer}
+              disable={player.order !== currentPlayer}
               pause={pause}
             />
           );
