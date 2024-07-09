@@ -1,15 +1,12 @@
 import { TextInput, StyleSheet } from "react-native";
 import { useState, useRef } from "react";
+import { padStart } from "@/utils/string";
 
 interface Props {
   value: number;
   maxValue: number;
   onUpdate: (num: number) => void;
 }
-
-const padStart = (value: string) => {
-  return value.padStart(2, "0");
-};
 
 export default function NumberInput({ value, maxValue, onUpdate }: Props) {
   const textValue = padStart(value.toString());

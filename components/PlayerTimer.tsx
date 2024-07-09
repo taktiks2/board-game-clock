@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { playerColors, defaultColor } from "@/constants/Colors";
 import { Player } from "@/states/playerState";
+import Timer from "@/components/Timer";
 
 interface Props {
   active: boolean;
@@ -70,7 +71,7 @@ export default function PlayerTimer({
       ]}
     >
       <Text style={styles.text}>{player.name}</Text>
-      <Text style={styles.text}>{timer}</Text>
+      <Timer value={timer} />
     </TouchableOpacity>
   );
 }
