@@ -4,23 +4,27 @@ import { padStart } from "@/utils/string";
 
 interface Props {
   value: number;
+  reverse?: boolean;
 }
 
 export default function Timer({ value }: Props) {
-  const { hour, minute, second } = useMemo(() => {
-    return {
-      hour: Math.floor(value / 3600).toString(),
-      minute: Math.floor((value % 3600) / 60).toString(),
-      second: (value % 60).toString(),
+  const timer = useMemo(() => {
+    const { hour, minute, second } = {
+      hour: padStart(Math.floor(value / 3600).toString()),
+      minute: padStart(Math.floor((value % 3600) / 60).toString()),
+      second: padStart((value % 60).toString()),
     };
+
+    if (hour === "00") {
+      if (minute === "00") {
+        return second;
+      }
+      return `${minute}:${second}`;
+    }
+    return `${hour}:${minute}:${second}`;
   }, [value]);
-  return (
-    <>
-      <Text style={styles.text}>
-        {`${padStart(hour)}:${padStart(minute)}:${padStart(second)}`}
-      </Text>
-    </>
-  );
+
+  return <Text style={styles.text}>{timer}</Text>;
 }
 
 const styles = StyleSheet.create({

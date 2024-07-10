@@ -5,7 +5,11 @@ import Button from "@/components/Button";
 import { useState } from "react";
 import PlayerNumberSelector from "@/components/PlayerNumberSelector";
 import PlayerProfile from "@/components/PlayerProfile";
-import { Player, generateDefaultPlayer } from "@/states/playerState";
+import {
+  Player,
+  generateDefaultPlayer,
+  refreshPlayers,
+} from "@/states/playerState";
 import { router } from "expo-router";
 
 const PLAYERS = Array.from({ length: 3 }, (_, i) => i + 2);
@@ -32,7 +36,7 @@ export default function Settings() {
 
   const handleUpdatePlayer = (value: Player) => {
     const newPlayers = players.map((player) => {
-      if (player.order === value.order) {
+      if (player.id === value.id) {
         return value;
       }
       return player;
@@ -51,7 +55,7 @@ export default function Settings() {
         text: "OK",
         onPress: () => {
           // NOTE: 新しいオブジェクトを生成して、Recoil の状態を更新する
-          setPlayerState([...players]);
+          setPlayerState(refreshPlayers(players));
           router.back();
         },
       },

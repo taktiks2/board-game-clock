@@ -26,8 +26,6 @@ export default function Index() {
   };
 
   useEffect(() => {
-    console.log("reset");
-    console.log(players);
     setPause(true);
     setCurrentPlayer(null);
   }, [players]);
