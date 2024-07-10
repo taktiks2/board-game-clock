@@ -71,7 +71,7 @@ export default function PlayerTimer({
       ]}
     >
       <Text style={styles.text}>{player.name}</Text>
-      <Timer value={timer} />
+      <Timer value={timer} danger={timer <= 10} />
     </TouchableOpacity>
   );
 }
