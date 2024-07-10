@@ -3,16 +3,11 @@ import { useState, useEffect } from "react";
 import PlayerTimer from "@/components/PlayerTimer";
 import MenuBar from "@/components/MenuBar";
 import Overlay from "@/components/Overlay";
-import { useRecoilState, useRecoilValue } from "recoil";
-import {
-  playerState,
-  settingPlayerState,
-  refreshPlayers,
-} from "@/states/playerState";
+import { useRecoilState } from "recoil";
+import { playerState, refreshPlayers } from "@/states/playerState";
 
 export default function Index() {
   const [players, setPlayers] = useRecoilState(playerState);
-  const settingPlayers = useRecoilValue(settingPlayerState);
   const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
   const [pause, setPause] = useState(true);
   const [mute, setMute] = useState(false);
@@ -35,7 +30,7 @@ export default function Index() {
       {
         text: "OK",
         onPress: () => {
-          setPlayers(refreshPlayers(settingPlayers));
+          setPlayers(refreshPlayers(players));
         },
       },
     ]);
