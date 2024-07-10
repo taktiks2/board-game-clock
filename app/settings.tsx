@@ -49,12 +49,10 @@ export default function Settings() {
       {
         text: "Cancel",
         style: "cancel",
-        onPress: () => {},
       },
       {
         text: "OK",
         onPress: () => {
-          // NOTE: 新しいオブジェクトを生成して、Recoil の状態を更新する
           setPlayerState(refreshPlayers(players));
           router.back();
         },

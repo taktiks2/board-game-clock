@@ -1,14 +1,18 @@
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Alert } from "react-native";
 import { useState, useEffect } from "react";
 import PlayerTimer from "@/components/PlayerTimer";
 import MenuBar from "@/components/MenuBar";
 import Overlay from "@/components/Overlay";
-import { useRecoilValue } from "recoil";
-import { playerState } from "@/states/playerState";
+import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  playerState,
+  settingPlayerState,
+  refreshPlayers,
+} from "@/states/playerState";
 
 export default function Index() {
-  const players = useRecoilValue(playerState);
-
+  const [players, setPlayers] = useRecoilState(playerState);
+  const settingPlayers = useRecoilValue(settingPlayerState);
   const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
   const [pause, setPause] = useState(true);
   const [mute, setMute] = useState(false);
@@ -23,6 +27,18 @@ export default function Index() {
       setCurrentPlayer(0);
     }
     setPause(false);
+  };
+
+  const handleReload = () => {
+    Alert.alert("Reset", "Are you sure?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "OK",
+        onPress: () => {
+          setPlayers(refreshPlayers(settingPlayers));
+        },
+      },
+    ]);
   };
 
   useEffect(() => {
@@ -43,7 +59,7 @@ export default function Index() {
         mute={mute}
         onResume={handleResume}
         onPause={() => setPause(true)}
-        onReload={() => {}}
+        onReload={handleReload}
         onMute={() => setMute(true)}
         onUnmute={() => setMute(false)}
       />
