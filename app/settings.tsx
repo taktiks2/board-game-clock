@@ -1,95 +1,115 @@
-import { View, StyleSheet, ScrollView, Alert } from "react-native";
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { settingPlayerState, playerState } from "@/states/playerState";
-import Button from "@/components/Button";
-import { useState } from "react";
-import PlayerNumberSelector from "@/components/PlayerNumberSelector";
-import PlayerProfile from "@/components/PlayerProfile";
 import {
-  Player,
-  generateDefaultPlayer,
-  refreshPlayers,
-} from "@/states/playerState";
-import { router } from "expo-router";
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Platform,
+} from "react-native";
+import { useState } from "react";
+import { getAsyncStorage } from "@/utils/asyncStorage";
+import DraggableFlatList, {
+  RenderItemParams,
+  ScaleDecorator,
+} from "react-native-draggable-flatlist";
+import { Swipeable } from "react-native-gesture-handler";
+import Button from "@/components/Button";
+import GameOptionModal from "@/components/GameOptionModal";
 
-const PLAYERS = Array.from({ length: 3 }, (_, i) => i + 2);
+const asyncStorage = getAsyncStorage();
+
+const isIos = Platform.OS === "ios";
 
 export default function Settings() {
-  const [players, setPlayers] = useRecoilState(settingPlayerState);
-  const setPlayerState = useSetRecoilState(playerState);
-  const [playerNumber, setPlayerNumber] = useState(players.length);
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleUpdatePlayerNumber = (num: number) => {
-    if (players.length < num) {
-      setPlayers([
-        ...players,
-        ...Array.from(
-          { length: num - players.length },
-          (_, i) => i + players.length,
-        ).map(generateDefaultPlayer),
-      ]);
-    } else {
-      setPlayers(players.slice(0, num));
-    }
-    setPlayerNumber(num);
-  };
+  const initData = Array.from({ length: 3 }, (_, i) => ({
+    key: i,
+    label: "label" + i,
+  }));
 
-  const handleUpdatePlayer = (value: Player) => {
-    const newPlayers = players.map((player) => {
-      if (player.id === value.id) {
-        return value;
-      }
-      return player;
-    });
-    setPlayers(newPlayers);
-  };
+  const [data, setData] = useState(initData);
 
-  const handlePress = () => {
-    Alert.alert("Game Start", "Are you ready?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
-      {
-        text: "OK",
-        onPress: () => {
-          setPlayerState(refreshPlayers(players));
-          router.back();
-        },
-      },
-    ]);
+  interface Item {
+    key: number;
+    label: string;
+  }
+
+  const renderItem = ({ item, drag, isActive }: RenderItemParams<Item>) => {
+    return (
+      <ScaleDecorator>
+        <Swipeable
+          renderLeftActions={() => (
+            <TouchableOpacity onPress={() => console.log("edit")}>
+              <View>
+                <Text>Edit</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+          renderRightActions={() => (
+            <TouchableOpacity onPress={() => console.log("delete")}>
+              <View>
+                <Text>Delete</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        >
+          <TouchableOpacity
+            disabled={isActive}
+            onLongPress={drag}
+            style={{
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: isActive ? "red" : "blue",
+            }}
+          >
+            <Text>{item.label}</Text>
+          </TouchableOpacity>
+        </Swipeable>
+      </ScaleDecorator>
+    );
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.playerNumberSelector}>
-        <PlayerNumberSelector
-          items={PLAYERS}
-          value={playerNumber}
-          onUpdate={handleUpdatePlayerNumber}
-        />
-      </View>
-      {players.map((player, i) => {
-        return (
-          <View key={i} style={styles.playerProfile}>
-            <PlayerProfile value={player} onUpdate={handleUpdatePlayer} />
-          </View>
-        );
-      })}
-      <Button text="Start" onPress={handlePress} />
-    </ScrollView>
+    <View style={styles.container}>
+      {/* <Button href="/gameOptionModal" text="Add" onPress={() => {}} /> */}
+      <Button
+        {...(isIos && { href: "/gameOptionModal" })}
+        text="Add"
+        onPress={() => (isIos ? {} : setIsModalVisible(true))}
+      />
+      <DraggableFlatList
+        data={data}
+        onDragEnd={({ data }) => setData(data)}
+        keyExtractor={(item) => `${item.key}`}
+        renderItem={renderItem}
+      />
+      <GameOptionModal
+        isVisible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     padding: 10,
     backgroundColor: "#333",
+  },
+  switchs: {
+    flexDirection: "row",
   },
   playerNumberSelector: {
     marginBottom: 10,
   },
   playerProfile: {
+    marginBottom: 10,
+  },
+  storage: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 10,
     marginBottom: 10,
   },
 });
