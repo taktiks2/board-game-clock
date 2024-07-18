@@ -2,8 +2,10 @@ import {
   View,
   StyleSheet,
   Text,
+  Alert,
   TouchableOpacity,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useState } from "react";
 import { getAsyncStorage } from "@/utils/asyncStorage";
@@ -14,6 +16,13 @@ import DraggableFlatList, {
 import { Swipeable } from "react-native-gesture-handler";
 import Button from "@/components/Button";
 import GameOptionModal from "@/components/GameOptionModal";
+import { useRouter } from "expo-router";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import {
+  settingPlayerState,
+  playerState,
+  refreshPlayers,
+} from "@/states/playerState";
 
 const asyncStorage = getAsyncStorage();
 
@@ -21,8 +30,10 @@ const isIos = Platform.OS === "ios";
 
 export default function Settings() {
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const setPlayerState = useSetRecoilState(playerState);
+  const router = useRouter();
 
-  const initData = Array.from({ length: 3 }, (_, i) => ({
+  const initData = Array.from({ length: 20 }, (_, i) => ({
     key: i,
     label: "label" + i,
   }));
@@ -60,6 +71,7 @@ export default function Settings() {
               alignItems: "center",
               justifyContent: "center",
               backgroundColor: isActive ? "red" : "blue",
+              height: 100,
             }}
           >
             <Text>{item.label}</Text>
@@ -69,25 +81,46 @@ export default function Settings() {
     );
   };
 
+  const handleRoute = () => {
+    router.push("/gameOptionModal");
+  };
+
+  const handlePress = () => {
+    Alert.alert("Game Start", "Are you ready?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "OK",
+        onPress: () => {
+          setPlayerState(refreshPlayers(players));
+          router.back();
+        },
+      },
+    ]);
+  };
+
   return (
-    <View style={styles.container}>
-      {/* <Button href="/gameOptionModal" text="Add" onPress={() => {}} /> */}
-      <Button
-        {...(isIos && { href: "/gameOptionModal" })}
-        text="Add"
-        onPress={() => (isIos ? {} : setIsModalVisible(true))}
-      />
-      <DraggableFlatList
-        data={data}
-        onDragEnd={({ data }) => setData(data)}
-        keyExtractor={(item) => `${item.key}`}
-        renderItem={renderItem}
-      />
+    <>
+      <View style={styles.container}>
+        <Button
+          text="Add"
+          onPress={() => (isIos ? handleRoute() : setIsModalVisible(true))}
+        />
+        <DraggableFlatList
+          data={data}
+          onDragEnd={({ data }) => setData(data)}
+          keyExtractor={(item) => `${item.key}`}
+          renderItem={renderItem}
+        />
+      </View>
+      <Button text="Start" onPress={handlePress} />
       <GameOptionModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
       />
-    </View>
+    </>
   );
 }
 
