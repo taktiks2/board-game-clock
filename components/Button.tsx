@@ -16,7 +16,7 @@ export default function Button({ onPress, text }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    height: 60,
+    height: 55,
     backgroundColor: "#55f",
     borderRadius: 10,
   },
@@ -24,6 +24,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 24,
     textAlign: "center",
-    lineHeight: 60,
+    lineHeight: 55,
   },
 });

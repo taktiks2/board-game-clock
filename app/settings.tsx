@@ -3,83 +3,43 @@ import {
   StyleSheet,
   Text,
   Alert,
-  TouchableOpacity,
+  Pressable,
   Platform,
   ScrollView,
 } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getAsyncStorage } from "@/utils/asyncStorage";
-import DraggableFlatList, {
-  RenderItemParams,
-  ScaleDecorator,
-} from "react-native-draggable-flatlist";
 import { Swipeable } from "react-native-gesture-handler";
 import Button from "@/components/Button";
 import GameOptionModal from "@/components/GameOptionModal";
 import { useRouter } from "expo-router";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useSetRecoilState } from "recoil";
 import {
-  settingPlayerState,
-  playerState,
-  refreshPlayers,
-} from "@/states/playerState";
+  gameSettingState,
+  generateInitialGameSettings,
+} from "@/states/gameSettingState";
 
-const asyncStorage = getAsyncStorage();
+const as = getAsyncStorage();
 
 const isIos = Platform.OS === "ios";
 
 export default function Settings() {
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const setPlayerState = useSetRecoilState(playerState);
+  const setGameSettingState = useSetRecoilState(gameSettingState);
+  const [gameSettings, setGameSettings] = useState(
+    generateInitialGameSettings(),
+  );
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
 
-  const initData = Array.from({ length: 20 }, (_, i) => ({
-    key: i,
-    label: "label" + i,
-  }));
-
-  const [data, setData] = useState(initData);
-
-  interface Item {
-    key: number;
-    label: string;
-  }
-
-  const renderItem = ({ item, drag, isActive }: RenderItemParams<Item>) => {
-    return (
-      <ScaleDecorator>
-        <Swipeable
-          renderLeftActions={() => (
-            <TouchableOpacity onPress={() => console.log("edit")}>
-              <View>
-                <Text>Edit</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-          renderRightActions={() => (
-            <TouchableOpacity onPress={() => console.log("delete")}>
-              <View>
-                <Text>Delete</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-        >
-          <TouchableOpacity
-            disabled={isActive}
-            onLongPress={drag}
-            style={{
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isActive ? "red" : "blue",
-              height: 100,
-            }}
-          >
-            <Text>{item.label}</Text>
-          </TouchableOpacity>
-        </Swipeable>
-      </ScaleDecorator>
-    );
-  };
+  useEffect(() => {
+    (async () => {
+      const gameSettings = await as.getGameSettings();
+      if (gameSettings) {
+        setGameSettings(gameSettings);
+      }
+    })();
+  }, []);
 
   const handleRoute = () => {
     router.push("/gameOptionModal");
@@ -94,7 +54,7 @@ export default function Settings() {
       {
         text: "OK",
         onPress: () => {
-          setPlayerState(refreshPlayers(players));
+          setGameSettingState(gameSettings[selectedIndex]);
           router.back();
         },
       },
@@ -102,33 +62,99 @@ export default function Settings() {
   };
 
   return (
-    <>
-      <View style={styles.container}>
-        <Button
-          text="Add"
-          onPress={() => (isIos ? handleRoute() : setIsModalVisible(true))}
-        />
-        <DraggableFlatList
-          data={data}
-          onDragEnd={({ data }) => setData(data)}
-          keyExtractor={(item) => `${item.key}`}
-          renderItem={renderItem}
-        />
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollViewContainer}>
+        <View style={styles.addButtonContainer}>
+          <Button
+            text="Add"
+            onPress={() => (isIos ? handleRoute() : setIsModalVisible(true))}
+          />
+        </View>
+        <View style={styles.listContainer}>
+          {gameSettings.map((gameSetting, index) => {
+            return (
+              <Swipeable
+                key={"" + gameSetting.id}
+                friction={2}
+                overshootLeft={false}
+                overshootRight={false}
+                renderLeftActions={() => (
+                  <Pressable
+                    style={{
+                      width: "25%",
+                      backgroundColor: "green",
+                    }}
+                    onPress={() => console.log("edit")}
+                  >
+                    <View>
+                      <Text>Edit</Text>
+                    </View>
+                  </Pressable>
+                )}
+                renderRightActions={() => (
+                  <Pressable
+                    style={{
+                      width: "25%",
+                      backgroundColor: "red",
+                    }}
+                    onPress={() => console.log("delete")}
+                  >
+                    <View>
+                      <Text>Delete</Text>
+                    </View>
+                  </Pressable>
+                )}
+              >
+                <Pressable
+                  onPress={() => setSelectedIndex(index)}
+                  style={{
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor:
+                      selectedIndex === index ? "yellow" : "blue",
+                    height: 100,
+                  }}
+                >
+                  <Text>{gameSetting.name}</Text>
+                </Pressable>
+              </Swipeable>
+            );
+          })}
+        </View>
+      </ScrollView>
+      <View style={styles.buttonContainer}>
+        <Button text="Start" onPress={handlePress} />
       </View>
-      <Button text="Start" onPress={handlePress} />
       <GameOptionModal
         isVisible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
       />
-    </>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
+    paddingHorizontal: 30,
+    paddingBottom: 30,
     backgroundColor: "#333",
+  },
+  scrollViewContainer: {
+    height: "90%",
+  },
+  listContainer: {
+    gap: 5,
+    overflow: "hidden",
+    borderRadius: 10,
+  },
+  addButtonContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  buttonContainer: {
+    flex: 1,
+    justifyContent: "flex-end",
   },
   switchs: {
     flexDirection: "row",

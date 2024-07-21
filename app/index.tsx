@@ -4,17 +4,17 @@ import PlayerTimer from "@/components/PlayerTimer";
 import MenuBar from "@/components/MenuBar";
 import Overlay from "@/components/Overlay";
 import { useRecoilState } from "recoil";
-import { playerState, refreshPlayers } from "@/states/playerState";
+import { gameSettingState, refreshPlayers } from "@/states/gameSettingState";
 
 export default function Index() {
-  const [players, setPlayers] = useRecoilState(playerState);
+  const [gameSetting, setGameSetting] = useRecoilState(gameSettingState);
   const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
   const [pause, setPause] = useState(true);
   const [mute, setMute] = useState(false);
 
   const handleChangePlayer = () => {
     if (currentPlayer === null) return;
-    setCurrentPlayer((currentPlayer + 1) % players.length);
+    setCurrentPlayer((currentPlayer + 1) % gameSetting.players.length);
   };
 
   const handleResume = () => {
@@ -30,7 +30,10 @@ export default function Index() {
       {
         text: "OK",
         onPress: () => {
-          setPlayers(refreshPlayers(players));
+          setGameSetting((prev) => ({
+            ...prev,
+            players: refreshPlayers(gameSetting.players),
+          }));
         },
       },
     ]);
@@ -39,7 +42,7 @@ export default function Index() {
   useEffect(() => {
     setPause(true);
     setCurrentPlayer(null);
-  }, [players]);
+  }, [gameSetting]);
 
   return (
     <>
@@ -59,7 +62,7 @@ export default function Index() {
         onUnmute={() => setMute(false)}
       />
       <View style={styles.body}>
-        {players.map((player, i) => {
+        {gameSetting.players.map((player, i) => {
           return (
             <PlayerTimer
               key={i}
