@@ -18,6 +18,8 @@ import {
   gameSettingState,
   generateInitialGameSettings,
 } from "@/states/gameSettingState";
+import { SvgXml } from "react-native-svg";
+import { logo } from "@/utils/svg";
 
 const as = getAsyncStorage();
 
@@ -64,6 +66,9 @@ export default function Settings() {
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollViewContainer}>
+        <View style={styles.logoContainer}>
+          <SvgXml xml={logo} />
+        </View>
         <View style={styles.addButtonContainer}>
           <Button
             text="Add"
@@ -110,9 +115,8 @@ export default function Settings() {
                   style={{
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor:
-                      selectedIndex === index ? "yellow" : "blue",
-                    height: 100,
+                    backgroundColor: "#666",
+                    height: 50,
                   }}
                 >
                   <Text>{gameSetting.name}</Text>
@@ -136,20 +140,26 @@ export default function Settings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 30,
+    paddingTop: 10,
+    paddingHorizontal: 20,
     paddingBottom: 30,
     backgroundColor: "#333",
+  },
+  logoContainer: {
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 10,
   },
   scrollViewContainer: {
     height: "90%",
   },
   listContainer: {
-    gap: 5,
+    gap: 1,
+    backgroundColor: "#aaa",
     overflow: "hidden",
     borderRadius: 10,
   },
   addButtonContainer: {
-    marginTop: 10,
     marginBottom: 10,
   },
   buttonContainer: {
