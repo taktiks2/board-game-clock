@@ -46,8 +46,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
   },
+  input: {
+    color: "#ddd",
+  },
   text: {
-    color: "#fff",
+    color: "#ddd",
     fontSize: 42,
     top: -3.5,
   },

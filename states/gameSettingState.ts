@@ -40,7 +40,7 @@ export const gameSettingState = atom<GameSetting>({
   default: generateGameSetting(2),
 });
 
-export const draftGameSettingState = atom<GameSetting>({
-  key: "draftGameSettingState",
-  default: generateGameSetting(2),
+export const gameSettingsState = atom<GameSetting[]>({
+  key: "gameSettingsState",
+  default: generateInitialGameSettings(),
 });

@@ -13,13 +13,11 @@ import { Swipeable } from "react-native-gesture-handler";
 import Button from "@/components/Button";
 import GameOptionModal from "@/components/GameOptionModal";
 import { useRouter } from "expo-router";
-import { useSetRecoilState } from "recoil";
-import {
-  gameSettingState,
-  generateInitialGameSettings,
-} from "@/states/gameSettingState";
+import { useRecoilState, useSetRecoilState } from "recoil";
+import { gameSettingState, gameSettingsState } from "@/states/gameSettingState";
 import { SvgXml } from "react-native-svg";
 import { logo } from "@/utils/svg";
+import { Ionicons } from "@expo/vector-icons";
 
 const as = getAsyncStorage();
 
@@ -28,20 +26,18 @@ const isIos = Platform.OS === "ios";
 export default function Settings() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const setGameSettingState = useSetRecoilState(gameSettingState);
-  const [gameSettings, setGameSettings] = useState(
-    generateInitialGameSettings(),
-  );
+  const [gameSettings, setGameSettings] = useRecoilState(gameSettingsState);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     (async () => {
-      const gameSettings = await as.getGameSettings();
-      if (gameSettings) {
-        setGameSettings(gameSettings);
+      const newGameSettings = await as.getGameSettings();
+      if (newGameSettings) {
+        setGameSettings(newGameSettings);
       }
     })();
-  }, []);
+  }, [gameSettings]);
 
   const handleRoute = () => {
     router.push("/gameOptionModal");
@@ -63,6 +59,32 @@ export default function Settings() {
     ]);
   };
 
+  const handleDelete = (index: number) => {
+    if (gameSettings.length === 1) {
+      Alert.alert("Oops!", "Can't delete last one", [
+        {
+          text: "OK",
+        },
+      ]);
+      return;
+    }
+    const newGameSettings = gameSettings.filter((_, i) => i !== index);
+    setGameSettings(newGameSettings);
+    as.setGameSettings(newGameSettings);
+    if (index === selectedIndex) {
+      setSelectedIndex(0);
+    }
+  };
+
+  const handleEdit = (index: number) => {
+    router.push({
+      pathname: "/gameOptionModal",
+      params: {
+        id: gameSettings[index].id,
+      },
+    });
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView style={styles.scrollViewContainer}>
@@ -76,20 +98,21 @@ export default function Settings() {
           />
         </View>
         <View style={styles.listContainer}>
-          {gameSettings.map((gameSetting, index) => {
+          {gameSettings.map((gameSetting, i) => {
             return (
               <Swipeable
                 key={"" + gameSetting.id}
-                friction={2}
                 overshootLeft={false}
                 overshootRight={false}
                 renderLeftActions={() => (
                   <Pressable
                     style={{
                       width: "25%",
+                      alignItems: "center",
+                      justifyContent: "center",
                       backgroundColor: "green",
                     }}
-                    onPress={() => console.log("edit")}
+                    onPress={() => handleEdit(i)}
                   >
                     <View>
                       <Text>Edit</Text>
@@ -100,9 +123,11 @@ export default function Settings() {
                   <Pressable
                     style={{
                       width: "25%",
+                      alignItems: "center",
+                      justifyContent: "center",
                       backgroundColor: "red",
                     }}
-                    onPress={() => console.log("delete")}
+                    onPress={() => handleDelete(i)}
                   >
                     <View>
                       <Text>Delete</Text>
@@ -111,15 +136,20 @@ export default function Settings() {
                 )}
               >
                 <Pressable
-                  onPress={() => setSelectedIndex(index)}
+                  onPress={() => setSelectedIndex(i)}
                   style={{
                     alignItems: "center",
-                    justifyContent: "center",
+                    flexDirection: "row",
                     backgroundColor: "#666",
+                    justifyContent: "space-between",
+                    paddingHorizontal: 20,
                     height: 50,
                   }}
                 >
-                  <Text>{gameSetting.name}</Text>
+                  <Text style={{ color: "#ddd" }}>{gameSetting.name}</Text>
+                  {i === selectedIndex && (
+                    <Ionicons name="checkmark" size={18} color="#3ff" />
+                  )}
                 </Pressable>
               </Swipeable>
             );
@@ -140,7 +170,6 @@ export default function Settings() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 10,
     paddingHorizontal: 20,
     paddingBottom: 30,
     backgroundColor: "#333",
@@ -148,19 +177,19 @@ const styles = StyleSheet.create({
   logoContainer: {
     width: "100%",
     alignItems: "center",
-    marginBottom: 10,
+    marginTop: 20,
+    marginBottom: 20,
   },
   scrollViewContainer: {
     height: "90%",
   },
   listContainer: {
     gap: 1,
-    backgroundColor: "#aaa",
     overflow: "hidden",
     borderRadius: 10,
   },
   addButtonContainer: {
-    marginBottom: 10,
+    marginBottom: 20,
   },
   buttonContainer: {
     flex: 1,
@@ -179,6 +208,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
+    backgroundColor: "#8f8",
     marginBottom: 10,
   },
 });
