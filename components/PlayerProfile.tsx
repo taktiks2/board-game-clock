@@ -1,6 +1,6 @@
 import { View, StyleSheet, TextInput } from "react-native";
 import TimePicker from "@/components/TimePicker";
-import { Player } from "@/states/playerState";
+import { Player } from "@/utils/types";
 
 interface Props {
   value: Player;
@@ -30,7 +30,7 @@ export default function PlayerProfile({ value, onUpdate }: Props) {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    height: 100,
+    height: 70,
   },
   textInput: {
     backgroundColor: "#ddd",

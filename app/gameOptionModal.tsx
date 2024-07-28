@@ -1,63 +1,109 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Alert,
-  Switch,
-  Text,
-} from "react-native";
-import { useRecoilState, useSetRecoilState } from "recoil";
-import { settingPlayerState, playerState } from "@/states/playerState";
+import { Alert, View, StyleSheet, Switch, Text, TextInput } from "react-native";
+import { useState, useEffect } from "react";
 import Button from "@/components/Button";
-import { useState } from "react";
 import PlayerNumberSelector from "@/components/PlayerNumberSelector";
 import PlayerProfile from "@/components/PlayerProfile";
-import { generateDefaultPlayer, refreshPlayers } from "@/states/playerState";
-import { router } from "expo-router";
-import { Player } from "@/utils/types";
+import {
+  generateDefaultPlayer,
+  generateGameSetting,
+} from "@/states/gameSettingState";
+import { Player, GameSetting } from "@/utils/types";
+import { getAsyncStorage } from "@/utils/asyncStorage";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 const PLAYERS = Array.from({ length: 3 }, (_, i) => i + 2);
 
-export default function Settings() {
-  const [players, setPlayers] = useRecoilState(settingPlayerState);
-  const setPlayerState = useSetRecoilState(playerState);
-  const [playerCount, setPlayerCount] = useState(players.length);
+const as = getAsyncStorage();
+
+export default function GameOptionModal() {
+  const [setting, setSetting] = useState(generateGameSetting(2));
+  const router = useRouter();
+  const { id } = useLocalSearchParams();
+
+  useEffect(() => {
+    (async () => {
+      if (id) {
+        const gameSettings = await as.getGameSettings();
+        if (gameSettings) {
+          const target = gameSettings.find((setting) => setting.id === id);
+          if (target) {
+            setSetting(target);
+          }
+        }
+      }
+    })();
+  }, []);
+
+  const handleUpdateAudioOn = (flag: boolean) => {
+    setSetting({
+      ...setting,
+      isAudioOn: flag,
+    });
+  };
+
+  const handleUpdateKeepAwake = (flag: boolean) => {
+    setSetting({
+      ...setting,
+      isKeepAwake: flag,
+    });
+  };
 
   const handleUpdatePlayerNumber = (num: number) => {
-    if (players.length < num) {
-      setPlayers([
-        ...players,
-        ...Array.from(
-          { length: num - players.length },
-          (_, i) => i + players.length,
-        ).map(generateDefaultPlayer),
-      ]);
-    } else {
-      setPlayers(players.slice(0, num));
-    }
-    setPlayerCount(num);
+    setSetting({
+      ...setting,
+      playerCount: num,
+      players:
+        setting.players.length < num
+          ? [
+              ...setting.players,
+              ...Array.from(
+                { length: num - setting.players.length },
+                (_, i) => i + setting.players.length,
+              ).map((i) => generateDefaultPlayer(i)),
+            ]
+          : setting.players.slice(0, num),
+    });
   };
 
   const handleUpdatePlayer = (value: Player) => {
-    const newPlayers = players.map((player) => {
+    const newPlayers = setting.players.map((player) => {
       if (player.id === value.id) {
         return value;
       }
       return player;
     });
-    setPlayers(newPlayers);
+    setSetting({
+      ...setting,
+      players: newPlayers,
+    });
   };
 
-  const handlePress = () => {
-    Alert.alert("Game Start", "Are you ready?", [
+  const handleSave = async () => {
+    const gameSettings = await as.getGameSettings();
+    let newSettings: GameSetting[] = [];
+    if (gameSettings) {
+      if (!gameSettings.some((item) => item.id === setting.id)) {
+        newSettings = [setting, ...gameSettings];
+      } else {
+        newSettings = gameSettings.map((item) => {
+          if (item.id === setting.id) {
+            return setting;
+          }
+          return setting;
+        });
+      }
+    } else {
+      newSettings = [setting];
+    }
+    Alert.alert("Save", "Are you sure?", [
       {
         text: "Cancel",
         style: "cancel",
       },
       {
-        text: "OK",
+        text: "Yes",
         onPress: () => {
-          setPlayerState(refreshPlayers(players));
+          as.setGameSettings(newSettings);
           router.back();
         },
       },
@@ -65,55 +111,91 @@ export default function Settings() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.switchs}>
-        <Text>音量</Text>
-        <Switch />
-        <Text>画面スリープ</Text>
-        <Switch />
-      </View>
-      <View style={styles.playerNumberSelector}>
+    <View style={styles.container}>
+      <View style={styles.settingContainer}>
+        <TextInput
+          style={{
+            paddingVertical: 4,
+            backgroundColor: "#ddd",
+            color: "#000",
+            textAlign: "left",
+            borderWidth: 2,
+            borderRadius: 5,
+            fontSize: 24,
+            paddingHorizontal: 10,
+          }}
+          value={setting.name}
+          onChangeText={(v) => {
+            setSetting({
+              ...setting,
+              name: v,
+            });
+          }}
+        />
+        <View style={styles.switchContainer}>
+          <Text style={styles.label}>音量</Text>
+          <Switch
+            value={setting.isAudioOn}
+            onValueChange={handleUpdateAudioOn}
+          />
+        </View>
+        <View style={styles.switchContainer}>
+          <Text style={styles.label}>画面スリープ</Text>
+          <Switch
+            value={setting.isKeepAwake}
+            onValueChange={handleUpdateKeepAwake}
+          />
+        </View>
         <PlayerNumberSelector
           items={PLAYERS}
-          value={playerCount}
+          value={setting.playerCount}
           onUpdate={handleUpdatePlayerNumber}
         />
+        {setting.players.map((player) => {
+          return (
+            <PlayerProfile
+              key={"" + player.id}
+              value={player}
+              onUpdate={handleUpdatePlayer}
+            />
+          );
+        })}
       </View>
-      {players.map((player, i) => {
-        return (
-          <View key={i} style={styles.playerProfile}>
-            <PlayerProfile value={player} onUpdate={handleUpdatePlayer} />
-          </View>
-        );
-      })}
-      <View style={styles.storage}>
-        <Button text="読込" onPress={() => {}} />
-        <Button text="保存" onPress={() => {}} />
+      <View style={styles.save}>
+        <Button text="保存" onPress={handleSave} />
       </View>
-      <Button text="Start" onPress={handlePress} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
     backgroundColor: "#333",
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+    justifyContent: "space-between",
   },
-  switchs: {
+  settingContainer: {
+    gap: 20,
+  },
+  switchContainer: {
+    width: "100%",
     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
-  playerNumberSelector: {
-    marginBottom: 10,
+  label: {
+    color: "#ddd",
+    fontSize: 24,
   },
-  playerProfile: {
-    marginBottom: 10,
-  },
-  storage: {
+  save: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
-    marginBottom: 10,
+  },
+  buttonContainer: {
+    flex: 1,
   },
 });

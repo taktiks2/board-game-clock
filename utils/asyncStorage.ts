@@ -13,7 +13,7 @@ class AsyncStorage {
     }
   }
 
-  async setgameSettings(value: GameSetting[]) {
+  async setGameSettings(value: GameSetting[]) {
     try {
       const jsonValue = JSON.stringify(value);
       await AS.setItem("gameSettings", jsonValue);
@@ -27,7 +27,7 @@ class AsyncStorage {
       const value = await this.getGameSettings();
       if (value) {
         const newValue = value.filter((gameSetting) => gameSetting.id !== id);
-        await this.setgameSettings(newValue);
+        await this.setGameSettings(newValue);
       }
     } catch (e) {
       console.error(e);

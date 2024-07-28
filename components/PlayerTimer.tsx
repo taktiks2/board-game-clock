@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { playerColors, defaultColor } from "@/constants/Colors";
-import { Player } from "@/states/playerState";
+import { Player } from "@/utils/types";
 import Timer from "@/components/Timer";
 
 interface Props {

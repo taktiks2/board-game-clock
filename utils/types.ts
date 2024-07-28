@@ -4,6 +4,7 @@ type GameMode = "normal" | "countDown";
 
 export interface GameSetting {
   id: ReturnType<typeof uuid.v4>;
+  name: string;
   playerCount: number;
   players: Player[];
   isKeepAwake: boolean;
