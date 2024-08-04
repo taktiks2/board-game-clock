@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { playerColors, defaultColor } from "@/constants/Colors";
 import { Player } from "@/utils/types";
 import Timer from "@/components/Timer";
+import useAudio from "@/utils/useAudio";
 
 interface Props {
+  mute: boolean;
   active: boolean;
   disable: boolean;
   pause: boolean;
@@ -13,6 +15,7 @@ interface Props {
 }
 
 export default function PlayerTimer({
+  mute,
   active,
   disable,
   pause,
@@ -21,18 +24,26 @@ export default function PlayerTimer({
 }: Props) {
   const [timer, setTimer] = useState(player.time);
   const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+  const { playSound } = useAudio();
 
-  const startTimer = () => {
+  const startTimer = useCallback(() => {
+    stopTimer();
     const id = setInterval(() => {
       setTimer((prev) => {
         if (prev === 0) {
           return 0;
         }
-        return prev - 1;
+        const newTime = prev - 1;
+        if (newTime == 0) {
+          playSound("beep", mute);
+        } else if (newTime <= 10) {
+          playSound("tiktak", mute);
+        }
+        return newTime;
       });
     }, 1000);
     setTimerId(id);
-  };
+  }, [mute]);
 
   const stopTimer = () => {
     if (timerId) {
@@ -57,7 +68,7 @@ export default function PlayerTimer({
       startTimer();
     }
     return () => stopTimer();
-  }, [active, pause]);
+  }, [active, pause, startTimer]);
 
   return (
     <TouchableOpacity
