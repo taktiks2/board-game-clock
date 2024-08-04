@@ -1,25 +1,39 @@
 import { View, StyleSheet, Alert } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PlayerTimer from "@/components/PlayerTimer";
 import MenuBar from "@/components/MenuBar";
 import Overlay from "@/components/Overlay";
 import { useRecoilState } from "recoil";
 import { gameSettingState, refreshPlayers } from "@/states/gameSettingState";
-import useAudio from "@/utils/useAudio";
 import { getAsyncStorage } from "@/utils/asyncStorage";
+import { Audio } from "expo-av";
 
 const as = getAsyncStorage();
+
+export interface Sounds {
+  tiktak: Audio.Sound;
+  beep: Audio.Sound;
+  change: Audio.Sound;
+}
 
 export default function Index() {
   const [gameSetting, setGameSetting] = useRecoilState(gameSettingState);
   const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
+  const [mute, setMute] = useState(!gameSetting.isAudioOn);
   const [pause, setPause] = useState(true);
-  const [mute, setMute] = useState(false);
-  const { playSound } = useAudio();
+  const [sounds, setSounds] = useState<Sounds | null>(null);
+
+  const playSound = useCallback(
+    async (name: keyof Sounds) => {
+      if (!sounds || mute) return;
+      await sounds[name].replayAsync();
+    },
+    [sounds, mute],
+  );
 
   const handleChangePlayer = async () => {
     if (currentPlayer === null) return;
-    playSound("change", mute);
+    playSound("change");
     setCurrentPlayer((currentPlayer + 1) % gameSetting.players.length);
   };
 
@@ -47,16 +61,35 @@ export default function Index() {
 
   useEffect(() => {
     (async () => {
+      const [tiktak, beep, change] = await Promise.all([
+        await Audio.Sound.createAsync(require("@/assets/sounds/tiktak.mp3")),
+        await Audio.Sound.createAsync(require("@/assets/sounds/beep.mp3")),
+        await Audio.Sound.createAsync(require("@/assets/sounds/change.mp3")),
+      ]);
+      setSounds({
+        tiktak: tiktak.sound,
+        beep: beep.sound,
+        change: change.sound,
+      });
+
       const storagedSetting = await as.getGameSettings();
       if (storagedSetting) {
         setGameSetting(storagedSetting[0]);
+        setMute(!storagedSetting[0].isAudioOn);
       }
     })();
+
+    return sounds
+      ? () => {
+          Object.values(sounds).forEach((sound) => sound.unloadAsync());
+        }
+      : undefined;
   }, []);
 
   useEffect(() => {
-    setPause(true);
     setCurrentPlayer(null);
+    setMute(!gameSetting.isAudioOn);
+    setPause(true);
   }, [gameSetting]);
 
   return (
@@ -80,8 +113,8 @@ export default function Index() {
         {gameSetting.players.map((player, i) => {
           return (
             <PlayerTimer
+              playSound={playSound}
               key={i}
-              mute={mute}
               player={player}
               onPress={handleChangePlayer}
               active={player.order === currentPlayer}

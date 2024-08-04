@@ -25,6 +25,7 @@ export default function RootLayout() {
             headerStyle: {
               backgroundColor: "#666",
             },
+            headerBackTitleVisible: false,
             headerTintColor: "#fff",
           }}
         >
