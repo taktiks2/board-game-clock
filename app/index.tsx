@@ -5,15 +5,18 @@ import MenuBar from "@/components/MenuBar";
 import Overlay from "@/components/Overlay";
 import { useRecoilState } from "recoil";
 import { gameSettingState, refreshPlayers } from "@/states/gameSettingState";
+import useAudio from "@/utils/useAudio";
 
 export default function Index() {
   const [gameSetting, setGameSetting] = useRecoilState(gameSettingState);
   const [currentPlayer, setCurrentPlayer] = useState<number | null>(null);
   const [pause, setPause] = useState(true);
   const [mute, setMute] = useState(false);
+  const { playSound } = useAudio();
 
-  const handleChangePlayer = () => {
+  const handleChangePlayer = async () => {
     if (currentPlayer === null) return;
+    playSound("change", mute);
     setCurrentPlayer((currentPlayer + 1) % gameSetting.players.length);
   };
 
@@ -70,6 +73,7 @@ export default function Index() {
               onPress={handleChangePlayer}
               active={player.order === currentPlayer}
               disable={player.order !== currentPlayer}
+              mute={mute}
               pause={pause}
             />
           );
