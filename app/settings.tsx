@@ -4,7 +4,6 @@ import {
   Text,
   Alert,
   Pressable,
-  Platform,
   ScrollView,
 } from "react-native";
 import { useState, useEffect } from "react";
@@ -20,8 +19,6 @@ import { logo } from "@/utils/svg";
 import { Ionicons } from "@expo/vector-icons";
 
 const as = getAsyncStorage();
-
-const isIos = Platform.OS === "ios";
 
 export default function Settings() {
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -92,10 +89,7 @@ export default function Settings() {
           <SvgXml xml={logo} />
         </View>
         <View style={styles.addButtonContainer}>
-          <Button
-            text="Add"
-            onPress={() => (isIos ? handleRoute() : setIsModalVisible(true))}
-          />
+          <Button text="Add" onPress={handleRoute} />
         </View>
         <View style={styles.listContainer}>
           {gameSettings.map((gameSetting, i) => {

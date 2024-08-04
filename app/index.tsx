@@ -6,6 +6,9 @@ import Overlay from "@/components/Overlay";
 import { useRecoilState } from "recoil";
 import { gameSettingState, refreshPlayers } from "@/states/gameSettingState";
 import useAudio from "@/utils/useAudio";
+import { getAsyncStorage } from "@/utils/asyncStorage";
+
+const as = getAsyncStorage();
 
 export default function Index() {
   const [gameSetting, setGameSetting] = useRecoilState(gameSettingState);
@@ -43,6 +46,15 @@ export default function Index() {
   };
 
   useEffect(() => {
+    (async () => {
+      const storagedSetting = await as.getGameSettings();
+      if (storagedSetting) {
+        setGameSetting(storagedSetting[0]);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     setPause(true);
     setCurrentPlayer(null);
   }, [gameSetting]);
@@ -69,11 +81,11 @@ export default function Index() {
           return (
             <PlayerTimer
               key={i}
+              mute={mute}
               player={player}
               onPress={handleChangePlayer}
               active={player.order === currentPlayer}
               disable={player.order !== currentPlayer}
-              mute={mute}
               pause={pause}
             />
           );
