@@ -37,14 +37,14 @@ export default function MenuBar({
       <Ionicons name="reload" size={SIZE} color={COLOR} onPress={onReload} />
       {mute ? (
         <Ionicons
-          name="volume-high"
+          name="volume-mute"
           size={SIZE}
           color={COLOR}
           onPress={onUnmute}
         />
       ) : (
         <Ionicons
-          name="volume-mute"
+          name="volume-high"
           size={SIZE}
           color={COLOR}
           onPress={onMute}

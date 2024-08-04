@@ -4,16 +4,14 @@ import {
   Text,
   Alert,
   Pressable,
-  Platform,
   ScrollView,
 } from "react-native";
 import { useState, useEffect } from "react";
 import { getAsyncStorage } from "@/utils/asyncStorage";
 import { Swipeable } from "react-native-gesture-handler";
 import Button from "@/components/Button";
-import GameOptionModal from "@/components/GameOptionModal";
 import { useRouter } from "expo-router";
-import { useRecoilState, useSetRecoilState } from "recoil";
+import { useSetRecoilState, useRecoilValue } from "recoil";
 import { gameSettingState, gameSettingsState } from "@/states/gameSettingState";
 import { SvgXml } from "react-native-svg";
 import { logo } from "@/utils/svg";
@@ -21,23 +19,21 @@ import { Ionicons } from "@expo/vector-icons";
 
 const as = getAsyncStorage();
 
-const isIos = Platform.OS === "ios";
-
 export default function Settings() {
-  const [isModalVisible, setIsModalVisible] = useState(false);
   const setGameSettingState = useSetRecoilState(gameSettingState);
-  const [gameSettings, setGameSettings] = useRecoilState(gameSettingsState);
+  const gameSettingsStateValue = useRecoilValue(gameSettingsState);
+  const [gameSettings, setGameSettings] = useState(gameSettingsStateValue);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     (async () => {
-      const newGameSettings = await as.getGameSettings();
-      if (newGameSettings) {
-        setGameSettings(newGameSettings);
+      const storageSettings = await as.getGameSettings();
+      if (storageSettings) {
+        setGameSettings(storageSettings);
       }
     })();
-  }, [gameSettings]);
+  }, [gameSettingsStateValue]);
 
   const handleRoute = () => {
     router.push("/gameOptionModal");
@@ -92,10 +88,7 @@ export default function Settings() {
           <SvgXml xml={logo} />
         </View>
         <View style={styles.addButtonContainer}>
-          <Button
-            text="Add"
-            onPress={() => (isIos ? handleRoute() : setIsModalVisible(true))}
-          />
+          <Button text="Add" onPress={handleRoute} />
         </View>
         <View style={styles.listContainer}>
           {gameSettings.map((gameSetting, i) => {
@@ -159,10 +152,6 @@ export default function Settings() {
       <View style={styles.buttonContainer}>
         <Button text="Start" onPress={handlePress} />
       </View>
-      <GameOptionModal
-        isVisible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
-      />
     </View>
   );
 }

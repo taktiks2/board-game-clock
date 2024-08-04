@@ -6,10 +6,12 @@ import PlayerProfile from "@/components/PlayerProfile";
 import {
   generateDefaultPlayer,
   generateGameSetting,
+  gameSettingsState,
 } from "@/states/gameSettingState";
 import { Player, GameSetting } from "@/utils/types";
 import { getAsyncStorage } from "@/utils/asyncStorage";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import { useSetRecoilState } from "recoil";
 
 const PLAYERS = Array.from({ length: 3 }, (_, i) => i + 2);
 
@@ -17,6 +19,7 @@ const as = getAsyncStorage();
 
 export default function GameOptionModal() {
   const [setting, setSetting] = useState(generateGameSetting(2));
+  const setGameSettingsState = useSetRecoilState(gameSettingsState);
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
@@ -41,12 +44,12 @@ export default function GameOptionModal() {
     });
   };
 
-  const handleUpdateKeepAwake = (flag: boolean) => {
-    setSetting({
-      ...setting,
-      isKeepAwake: flag,
-    });
-  };
+  // const handleUpdateKeepAwake = (flag: boolean) => {
+  //   setSetting({
+  //     ...setting,
+  //     isKeepAwake: flag,
+  //   });
+  // };
 
   const handleUpdatePlayerNumber = (num: number) => {
     setSetting({
@@ -83,17 +86,17 @@ export default function GameOptionModal() {
     let newSettings: GameSetting[] = [];
     if (gameSettings) {
       if (!gameSettings.some((item) => item.id === setting.id)) {
+        // TODO: 新規作成時
         newSettings = [setting, ...gameSettings];
       } else {
+        // TODO: 編集時
         newSettings = gameSettings.map((item) => {
           if (item.id === setting.id) {
             return setting;
           }
-          return setting;
+          return item;
         });
       }
-    } else {
-      newSettings = [setting];
     }
     Alert.alert("Save", "Are you sure?", [
       {
@@ -104,6 +107,7 @@ export default function GameOptionModal() {
         text: "Yes",
         onPress: () => {
           as.setGameSettings(newSettings);
+          setGameSettingsState(newSettings);
           router.back();
         },
       },
@@ -139,13 +143,13 @@ export default function GameOptionModal() {
             onValueChange={handleUpdateAudioOn}
           />
         </View>
-        <View style={styles.switchContainer}>
-          <Text style={styles.label}>画面スリープ</Text>
-          <Switch
-            value={setting.isKeepAwake}
-            onValueChange={handleUpdateKeepAwake}
-          />
-        </View>
+        {/* <View style={styles.switchContainer}> */}
+        {/*   <Text style={styles.label}>画面スリープ</Text> */}
+        {/*   <Switch */}
+        {/*     value={setting.isKeepAwake} */}
+        {/*     onValueChange={handleUpdateKeepAwake} */}
+        {/*   /> */}
+        {/* </View> */}
         <PlayerNumberSelector
           items={PLAYERS}
           value={setting.playerCount}
