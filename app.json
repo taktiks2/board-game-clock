@@ -8,7 +8,9 @@
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.taktiks2.boardgameclock",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,6 +32,12 @@
       "eas": {
         "projectId": "59df943f-e4f1-4b7c-b497-21c45e70d9cc"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/59df943f-e4f1-4b7c-b497-21c45e70d9cc"
     }
   }
 }
