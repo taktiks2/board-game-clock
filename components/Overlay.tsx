@@ -5,7 +5,7 @@ interface Props {
   onPress: () => void;
 }
 
-export default function MenuBar({ onPress, text }: Props) {
+export default function Overlay({ onPress, text }: Props) {
   return (
     <Pressable style={styles.container} onPress={onPress}>
       <Text style={styles.text}>{text}</Text>

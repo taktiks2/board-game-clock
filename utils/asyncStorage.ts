@@ -1,42 +1,34 @@
-import { default as AS } from "@react-native-async-storage/async-storage";
-import uuid from "react-native-uuid";
-import { GameSetting } from "@/utils/types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { GameSetting } from "./types";
 
-class AsyncStorage {
-  async getGameSettings(): Promise<GameSetting[] | null> {
-    try {
-      const value = await AS.getItem("gameSettings");
-      return value ? JSON.parse(value) : null;
-    } catch (e) {
-      console.error(e);
-      return null;
-    }
-  }
+const STORAGE_KEY = "gameSettings";
 
-  async setGameSettings(value: GameSetting[]) {
-    try {
-      const jsonValue = JSON.stringify(value);
-      await AS.setItem("gameSettings", jsonValue);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async deleteGameSettings(id: ReturnType<typeof uuid.v4>) {
-    try {
-      const value = await this.getGameSettings();
-      if (value) {
-        const newValue = value.filter((gameSetting) => gameSetting.id !== id);
-        await this.setGameSettings(newValue);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+export async function getGameSettings(): Promise<GameSetting[] | null> {
+  try {
+    const value = await AsyncStorage.getItem(STORAGE_KEY);
+    return value ? JSON.parse(value) : null;
+  } catch (e) {
+    console.error(e);
+    return null;
   }
 }
 
-const asyncStorage = new AsyncStorage();
+export async function setGameSettings(value: GameSetting[]): Promise<void> {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(value));
+  } catch (e) {
+    console.error(e);
+  }
+}
 
-export const getAsyncStorage = () => {
-  return asyncStorage;
-};
+export async function deleteGameSetting(id: string): Promise<void> {
+  try {
+    const settings = await getGameSettings();
+    if (settings) {
+      const filtered = settings.filter((s) => s.id !== id);
+      await setGameSettings(filtered);
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}

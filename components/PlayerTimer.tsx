@@ -1,12 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Text, StyleSheet, TouchableOpacity } from "react-native";
 import { playerColors, defaultColor } from "@/constants/Colors";
 import { Player } from "@/utils/types";
 import Timer from "@/components/Timer";
-import { Sounds } from "@/app/index";
+
+export type SoundName = "tiktak" | "beep" | "change";
 
 interface Props {
-  playSound: (sound: keyof Sounds) => Promise<void>;
+  playSound: (sound: SoundName) => void;
   active: boolean;
   disable: boolean;
   pause: boolean;
@@ -23,17 +24,22 @@ export default function PlayerTimer({
   onPress,
 }: Props) {
   const [timer, setTimer] = useState(player.time);
-  const [timerId, setTimerId] = useState<NodeJS.Timeout | null>(null);
+  const timerIdRef = useRef<NodeJS.Timeout | null>(null);
+
+  const stopTimer = useCallback(() => {
+    if (timerIdRef.current) {
+      clearInterval(timerIdRef.current);
+      timerIdRef.current = null;
+    }
+  }, []);
 
   const startTimer = useCallback(() => {
     stopTimer();
-    const id = setInterval(() => {
+    timerIdRef.current = setInterval(() => {
       setTimer((prev) => {
-        if (prev === 0) {
-          return 0;
-        }
+        if (prev === 0) return 0;
         const newTime = prev - 1;
-        if (newTime == 0) {
+        if (newTime === 0) {
           playSound("beep");
         } else if (newTime <= 10) {
           playSound("tiktak");
@@ -41,14 +47,7 @@ export default function PlayerTimer({
         return newTime;
       });
     }, 1000);
-    setTimerId(id);
-  }, [playSound]);
-
-  const stopTimer = () => {
-    if (timerId) {
-      clearInterval(timerId);
-    }
-  };
+  }, [playSound, stopTimer]);
 
   const handlePress = () => {
     stopTimer();
@@ -66,8 +65,8 @@ export default function PlayerTimer({
     } else if (active) {
       startTimer();
     }
-    return () => stopTimer();
-  }, [active, pause, startTimer]);
+    return stopTimer;
+  }, [active, pause, startTimer, stopTimer]);
 
   return (
     <TouchableOpacity

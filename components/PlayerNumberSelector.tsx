@@ -13,21 +13,19 @@ export default function PlayerNumberSelector({
 }: Props) {
   return (
     <View style={styles.container}>
-      {items.map((num, i) => {
-        return (
-          <TouchableOpacity
-            key={i}
-            style={[
-              styles.element,
-              value === num ? styles.selected : styles.default,
-            ]}
-            disabled={value === num}
-            onPress={() => onUpdate(num)}
-          >
-            <Text>{num}</Text>
-          </TouchableOpacity>
-        );
-      })}
+      {items.map((num, i) => (
+        <TouchableOpacity
+          key={i}
+          style={[
+            styles.element,
+            value === num ? styles.selected : styles.default,
+          ]}
+          disabled={value === num}
+          onPress={() => onUpdate(num)}
+        >
+          <Text>{num}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 }
@@ -42,10 +40,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 2,
     gap: 2,
-  },
-  text: {
-    color: "#fff",
-    fontSize: 24,
   },
   element: {
     flex: 1,

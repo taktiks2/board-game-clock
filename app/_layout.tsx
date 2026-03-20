@@ -1,42 +1,33 @@
 import { Stack } from "expo-router";
 import { useEffect } from "react";
-import { RecoilRoot } from "recoil";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { getAsyncStorage } from "@/utils/asyncStorage";
-import { generateInitialGameSettings } from "@/states/gameSettingState";
-
-const as = getAsyncStorage();
+import { useGameStore } from "@/stores/useGameStore";
 
 export default function RootLayout() {
+  const initialize = useGameStore((s) => s.initialize);
+
   useEffect(() => {
-    (async () => {
-      const gameSettings = await as.getGameSettings();
-      if (!gameSettings) {
-        await as.setGameSettings(generateInitialGameSettings());
-      }
-    })();
-  });
+    initialize();
+  }, [initialize]);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <RecoilRoot>
-        <Stack
-          screenOptions={{
-            headerStyle: {
-              backgroundColor: "#666",
-            },
-            headerBackTitleVisible: false,
-            headerTintColor: "#fff",
-          }}
-        >
-          <Stack.Screen name="index" options={{ title: "Board Game Clock" }} />
-          <Stack.Screen name="settings" options={{ title: "Settings" }} />
-          <Stack.Screen
-            name="gameOptionModal"
-            options={{ title: "Game Option", presentation: "modal" }}
-          />
-        </Stack>
-      </RecoilRoot>
+      <Stack
+        screenOptions={{
+          headerStyle: {
+            backgroundColor: "#666",
+          },
+          headerBackButtonDisplayMode: "minimal",
+          headerTintColor: "#fff",
+        }}
+      >
+        <Stack.Screen name="index" options={{ title: "Board Game Clock" }} />
+        <Stack.Screen name="settings" options={{ title: "Settings" }} />
+        <Stack.Screen
+          name="gameOptionModal"
+          options={{ title: "Game Option", presentation: "modal" }}
+        />
+      </Stack>
     </GestureHandlerRootView>
   );
 }

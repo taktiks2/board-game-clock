@@ -14,20 +14,17 @@ export default function TimePicker({ value, onUpdate }: Props) {
 
   const handleChangeHour = (num: number) => {
     setHour(num);
-    const time = num * 3600 + minute * 60 + second;
-    onUpdate(time);
+    onUpdate(num * 3600 + minute * 60 + second);
   };
 
   const handleChangeMinute = (num: number) => {
     setMinute(num);
-    const time = hour * 3600 + num * 60 + second;
-    onUpdate(time);
+    onUpdate(hour * 3600 + num * 60 + second);
   };
 
   const handleChangeSecond = (num: number) => {
     setSecond(num);
-    const time = hour * 3600 + minute * 60 + num;
-    onUpdate(time);
+    onUpdate(hour * 3600 + minute * 60 + num);
   };
 
   return (
@@ -45,9 +42,6 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     justifyContent: "center",
-  },
-  input: {
-    color: "#ddd",
   },
   text: {
     color: "#ddd",

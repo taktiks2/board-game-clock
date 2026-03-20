@@ -6,50 +6,33 @@ import PlayerProfile from "@/components/PlayerProfile";
 import {
   generateDefaultPlayer,
   generateGameSetting,
-  gameSettingsState,
-} from "@/states/gameSettingState";
-import { Player, GameSetting } from "@/utils/types";
-import { getAsyncStorage } from "@/utils/asyncStorage";
+} from "@/utils/gameSettingFactory";
+import { Player } from "@/utils/types";
+import { useGameStore } from "@/stores/useGameStore";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useSetRecoilState } from "recoil";
 
 const PLAYERS = Array.from({ length: 3 }, (_, i) => i + 2);
 
-const as = getAsyncStorage();
-
 export default function GameOptionModal() {
   const [setting, setSetting] = useState(generateGameSetting(2));
-  const setGameSettingsState = useSetRecoilState(gameSettingsState);
+  const allSettings = useGameStore((s) => s.allSettings);
+  const addSetting = useGameStore((s) => s.addSetting);
+  const updateSetting = useGameStore((s) => s.updateSetting);
   const router = useRouter();
   const { id } = useLocalSearchParams();
 
   useEffect(() => {
-    (async () => {
-      if (id) {
-        const gameSettings = await as.getGameSettings();
-        if (gameSettings) {
-          const target = gameSettings.find((setting) => setting.id === id);
-          if (target) {
-            setSetting(target);
-          }
-        }
+    if (id) {
+      const target = allSettings.find((s) => s.id === id);
+      if (target) {
+        setSetting(target);
       }
-    })();
-  }, []);
+    }
+  }, [id, allSettings]);
 
   const handleUpdateAudioOn = (flag: boolean) => {
-    setSetting({
-      ...setting,
-      isAudioOn: flag,
-    });
+    setSetting({ ...setting, isAudioOn: flag });
   };
-
-  // const handleUpdateKeepAwake = (flag: boolean) => {
-  //   setSetting({
-  //     ...setting,
-  //     isKeepAwake: flag,
-  //   });
-  // };
 
   const handleUpdatePlayerNumber = (num: number) => {
     setSetting({
@@ -61,53 +44,33 @@ export default function GameOptionModal() {
               ...setting.players,
               ...Array.from(
                 { length: num - setting.players.length },
-                (_, i) => i + setting.players.length,
-              ).map((i) => generateDefaultPlayer(i)),
+                (_, i) => generateDefaultPlayer(i + setting.players.length),
+              ),
             ]
           : setting.players.slice(0, num),
     });
   };
 
   const handleUpdatePlayer = (value: Player) => {
-    const newPlayers = setting.players.map((player) => {
-      if (player.id === value.id) {
-        return value;
-      }
-      return player;
-    });
     setSetting({
       ...setting,
-      players: newPlayers,
+      players: setting.players.map((p) => (p.id === value.id ? value : p)),
     });
   };
 
-  const handleSave = async () => {
-    const gameSettings = await as.getGameSettings();
-    let newSettings: GameSetting[] = [];
-    if (gameSettings) {
-      if (!gameSettings.some((item) => item.id === setting.id)) {
-        // TODO: 新規作成時
-        newSettings = [setting, ...gameSettings];
-      } else {
-        // TODO: 編集時
-        newSettings = gameSettings.map((item) => {
-          if (item.id === setting.id) {
-            return setting;
-          }
-          return item;
-        });
-      }
-    }
+  const handleSave = () => {
+    const isNew = !allSettings.some((item) => item.id === setting.id);
+
     Alert.alert("Save", "Are you sure?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
+      { text: "Cancel", style: "cancel" },
       {
         text: "Yes",
-        onPress: () => {
-          as.setGameSettings(newSettings);
-          setGameSettingsState(newSettings);
+        onPress: async () => {
+          if (isNew) {
+            await addSetting(setting);
+          } else {
+            await updateSetting(setting);
+          }
           router.back();
         },
       },
@@ -118,23 +81,9 @@ export default function GameOptionModal() {
     <View style={styles.container}>
       <View style={styles.settingContainer}>
         <TextInput
-          style={{
-            paddingVertical: 4,
-            backgroundColor: "#ddd",
-            color: "#000",
-            textAlign: "left",
-            borderWidth: 2,
-            borderRadius: 5,
-            fontSize: 24,
-            paddingHorizontal: 10,
-          }}
+          style={styles.nameInput}
           value={setting.name}
-          onChangeText={(v) => {
-            setSetting({
-              ...setting,
-              name: v,
-            });
-          }}
+          onChangeText={(v) => setSetting({ ...setting, name: v })}
         />
         <View style={styles.switchContainer}>
           <Text style={styles.label}>音量</Text>
@@ -143,27 +92,18 @@ export default function GameOptionModal() {
             onValueChange={handleUpdateAudioOn}
           />
         </View>
-        {/* <View style={styles.switchContainer}> */}
-        {/*   <Text style={styles.label}>画面スリープ</Text> */}
-        {/*   <Switch */}
-        {/*     value={setting.isKeepAwake} */}
-        {/*     onValueChange={handleUpdateKeepAwake} */}
-        {/*   /> */}
-        {/* </View> */}
         <PlayerNumberSelector
           items={PLAYERS}
           value={setting.playerCount}
           onUpdate={handleUpdatePlayerNumber}
         />
-        {setting.players.map((player) => {
-          return (
-            <PlayerProfile
-              key={"" + player.id}
-              value={player}
-              onUpdate={handleUpdatePlayer}
-            />
-          );
-        })}
+        {setting.players.map((player) => (
+          <PlayerProfile
+            key={player.id}
+            value={player}
+            onUpdate={handleUpdatePlayer}
+          />
+        ))}
       </View>
       <View style={styles.save}>
         <Button text="保存" onPress={handleSave} />
@@ -194,12 +134,19 @@ const styles = StyleSheet.create({
     color: "#ddd",
     fontSize: 24,
   },
+  nameInput: {
+    paddingVertical: 4,
+    backgroundColor: "#ddd",
+    color: "#000",
+    textAlign: "left",
+    borderWidth: 2,
+    borderRadius: 5,
+    fontSize: 24,
+    paddingHorizontal: 10,
+  },
   save: {
     alignItems: "center",
     flexDirection: "row",
     gap: 10,
-  },
-  buttonContainer: {
-    flex: 1,
   },
 });

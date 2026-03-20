@@ -1,21 +1,19 @@
-import uuid from "react-native-uuid";
+export type GameMode = "normal" | "countDown";
 
-type GameMode = "normal" | "countDown";
+export interface Player {
+  id: string;
+  name: string;
+  time: number;
+  move: number;
+  order: number;
+}
 
 export interface GameSetting {
-  id: ReturnType<typeof uuid.v4>;
+  id: string;
   name: string;
   playerCount: number;
   players: Player[];
   isKeepAwake: boolean;
   isAudioOn: boolean;
   gameMode: GameMode;
-}
-
-export interface Player {
-  id: ReturnType<typeof uuid.v4>;
-  name: string;
-  time: number;
-  move: number;
-  order: number;
 }

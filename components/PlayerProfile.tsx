@@ -41,9 +41,4 @@ const styles = StyleSheet.create({
     width: 100,
     paddingHorizontal: 10,
   },
-  text: {
-    color: "#fff",
-    fontSize: 24,
-    textAlign: "center",
-  },
 });
